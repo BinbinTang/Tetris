@@ -20,7 +20,7 @@ public class PlayerSkeleton {
 	static double W_UPPERBOUND = 1.0;
 	static double W_LOWERBOUND = 0.0;
 	static double LOW = -10;
-	static double HIGH = 10;
+	static double HIGH = 3;
 	static double VEL_LOW = -1;
 	static double VEL_HIGH = 1;
 	static double TEST_TIME = 2;
@@ -407,7 +407,7 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
 				
 				s.draw();
 				s.drawNext(0,0);
@@ -430,7 +430,7 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
 			}
 			int score = s.getRowsCleared();
 			//System.out.println("moves made = "+move);
@@ -570,8 +570,6 @@ public class PlayerSkeleton {
 			ans += runOnce(bestWeight, true);
 		ans = ans/TEST_TIME;
 		System.out.println(ans);
-		
-		
 	}
 	
 }
