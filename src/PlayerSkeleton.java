@@ -12,14 +12,14 @@ import java.util.Vector;
 public class PlayerSkeleton {
 	
 	// Global result for lotus swarm
-	static int SWARM_SIZE = 30;
+	static int SWARM_SIZE = 1000;
 	static int MAX_ITERATION = 500;
 	static int PROBLEM_DIMENSION = 5;
 	static double C1 = 2.0;
 	static double C2 = 2.0;
 	static double W_UPPERBOUND = 1.0;
 	static double W_LOWERBOUND = 0.0;
-	static double LOW = -10;
+	static double LOW = -100;
 	static double HIGH = 3;
 	static double VEL_LOW = -1;
 	static double VEL_HIGH = 1;
