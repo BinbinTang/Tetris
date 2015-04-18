@@ -13,7 +13,7 @@ public class PlayerSkeleton {
 	
 	// Global result for lotus swarm
 	static int SWARM_SIZE = 30;
-	static int MAX_ITERATION = 100;
+	static int MAX_ITERATION = 500;
 	static int PROBLEM_DIMENSION = 5;
 	static double C1 = 2.0;
 	static double C2 = 2.0;
@@ -23,7 +23,7 @@ public class PlayerSkeleton {
 	static double HIGH = 10;
 	static double VEL_LOW = -1;
 	static double VEL_HIGH = 1;
-	static double TEST_TIME = 1;
+	static double TEST_TIME = 2;
 	
 	
 	static double[] result_particle = null;
@@ -168,10 +168,6 @@ public class PlayerSkeleton {
 		return V;
 	}
 	
-	public double evaluate(State s, State os, double[] weights){
-		double cost = 0; 
-		return cost;
-	}
 	public double evaluate1(State s, State os, double[] weights){
 		int[] heights 		= getColumnHeights(s);
 		int[] heightDiff 	= getHeightDiff(s);
@@ -342,6 +338,11 @@ public class PlayerSkeleton {
 			}
 
 		}
+		
+		//for (int i=0; i<5; i++)
+		//	System.out.print(bestFiveU[i]+" ");
+		//System.out.println();
+		
 
 		//System.out.println("Action = "+ printArrInt(legalMoves[maxUAction]));
 		//System.out.println ("Action="+maxUAction+" U="+maxU+" R="+maxR+" V="+maxV);
@@ -406,13 +407,13 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
 				
 				s.draw();
 				s.drawNext(0,0);
 				
 				try {
-					Thread.sleep(10);
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -429,7 +430,7 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
 			}
 			int score = s.getRowsCleared();
 			//System.out.println("moves made = "+move);
@@ -527,8 +528,8 @@ public class PlayerSkeleton {
 			}
 			
 			System.out.println("ITERATION " + t + ": ");
-			//System.out.println(printArrDouble(gBestLocation.getLoc()));
-			System.out.println(runOnce(gBestLocation.getLoc(), false));
+			System.out.println(printArrDouble(gBestLocation.getLoc()));
+			//System.out.println(runOnce(gBestLocation.getLoc(), true));
 			System.out.println(gBest);
 			
 			t++;
@@ -555,13 +556,13 @@ public class PlayerSkeleton {
 		//double[] bestWeights= {-0.79, -0.15, -0.14, -0.1, -0.75};
 		
 		//so far best weights for evaluate3
-		//double[] bestWeights= {-0.99, -0.61, 0.0, -0.1, -0.23};
+		//double[] bestWeights= {-138.51506302626194,-26.13212253224357,-0.8955877227084024,-36.050852075521725,-76.97989990999787 };
 		
 		//so far best weights for evaluate0
 		
 		// Test
 		double[] bestWeight = PSOExecute();
-		System.out.println(printArrDouble(bestWeight));
+		//System.out.println(printArrDouble(bestWeight));
 		
 		//double max = 0;
 		double ans = 0;
