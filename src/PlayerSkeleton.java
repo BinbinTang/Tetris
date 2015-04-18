@@ -347,7 +347,7 @@ public class PlayerSkeleton {
 		//System.out.println("Action = "+ printArrInt(legalMoves[maxUAction]));
 		//System.out.println ("Action="+maxUAction+" U="+maxU+" R="+maxR+" V="+maxV);
 		
-		int MaxU = 0;
+		int MaxU = -100000000;
 		int MaxIndex = 0;
 		for (int current=0; current<5; current++)
 		{
@@ -363,11 +363,17 @@ public class PlayerSkeleton {
 				sss.setField(ss.getField());
 				sss.setNextPiece(i);
 				sss.setTop(ss.getTop());
+				
+				maxU = -10000000;
+				maxV = 0;
+				maxR =0;
+				maxUAction = 0;
+				
 				for (int j=0; j<sss.legalMoves().length; j++)
 				{
 					SimState ssss = new SimState();
 					ssss.setField(sss.getField());
-					ssss.setNextPiece(sss.getNextPiece());
+					ssss.setNextPiece(i);
 					ssss.setTop(sss.getTop());
 					ssss.makeMove(sss.legalMoves()[j]);
 					//System.out.println("J = "+j);
@@ -383,9 +389,16 @@ public class PlayerSkeleton {
 					int R = ssss.getRowsCleared();
 					double U = R+V;
 					
-					//update selection
-					sumCurrentMoveU += U;
+					if(U>maxU){
+						maxU = U;
+						maxUAction = i;
+						maxV = V;
+						maxR = R;
+					}
+					
 				}
+				//update selection
+				sumCurrentMoveU += maxU;
 				
 			}
 			if (sumCurrentMoveU>MaxU)
@@ -430,7 +443,7 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
 			}
 			int score = s.getRowsCleared();
 			//System.out.println("moves made = "+move);
@@ -561,7 +574,7 @@ public class PlayerSkeleton {
 		//so far best weights for evaluate0
 		
 		// Test
-		double[] bestWeight = PSOExecute();
+		double[] bestWeight = /*{-8.94571873, -4.3118907, -5.74438422, 0.341797307, 1.044628353}; */PSOExecute();
 		//System.out.println(printArrDouble(bestWeight));
 		
 		//double max = 0;
