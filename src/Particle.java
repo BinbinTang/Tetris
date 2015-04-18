@@ -32,8 +32,4 @@ public class Particle {
 		this.location = location;
 	}
 
-	public double getFitnessValue() {
-		fitnessValue = ProblemSet.evaluate(location);
-		return fitnessValue;
-	}
 }

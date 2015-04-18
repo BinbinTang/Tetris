@@ -13,7 +13,7 @@ public class PlayerSkeleton {
 	
 	// Global result for lotus swarm
 	static int SWARM_SIZE = 30;
-	static int MAX_ITERATION = 1000;
+	static int MAX_ITERATION = 100;
 	static int PROBLEM_DIMENSION = 5;
 	static double C1 = 2.0;
 	static double C2 = 2.0;
@@ -23,7 +23,7 @@ public class PlayerSkeleton {
 	static double HIGH = 10;
 	static double VEL_LOW = -1;
 	static double VEL_HIGH = 1;
-	static double TEST_TIME = 5;
+	static double TEST_TIME = 1;
 	
 	
 	static double[] result_particle = null;
@@ -88,7 +88,6 @@ public class PlayerSkeleton {
 		}
 		return Math.sqrt(var/h.length);
 	}
-
 	public int getMaxHeight (State s){
 		int h[] = s.getTop();
 		int max = h[0];
@@ -142,7 +141,6 @@ public class PlayerSkeleton {
 		}
 		return count;
 	}
-
 	public double evaluate0(State s, State os, double[] weights){
 		int[] heights 		= getColumnHeights(s);
 		int[] heightDiff 	= getHeightDiff(s);
@@ -168,6 +166,11 @@ public class PlayerSkeleton {
 		V+=features[features.length-2]*weights[weights.length-2];
 		V+=features[features.length-1]*weights[weights.length-1];
 		return V;
+	}
+	
+	public double evaluate(State s, State os, double[] weights){
+		double cost = 0; 
+		return cost;
 	}
 	public double evaluate1(State s, State os, double[] weights){
 		int[] heights 		= getColumnHeights(s);
@@ -271,6 +274,129 @@ public class PlayerSkeleton {
 		
 		return maxUAction;
 	}
+	public int pickMoveAdvance(State s, int[][] legalMoves, double[] weights) {
+
+		double maxU = -1000000;
+		double maxV = 0;
+		int maxR =0;
+		int maxUAction = 0;
+		
+		double[] bestFiveU = new double[5];
+		int[] bestFiveAction = new int[5];
+		int currentNumberOfBestFive = 0;
+		double minBestFiveU = Integer.MAX_VALUE;
+		int minBestFiveAction = -1;
+		int minBestFiveIndex = -1;
+		
+		
+		
+		for(int i=0; i<legalMoves.length; i++){
+			//simulate a move
+			SimState ss = new SimState();
+			ss.setField(s.getField());
+			ss.setNextPiece(s.getNextPiece());
+			ss.setTop(s.getTop());
+			ss.makeMove(legalMoves[i]);
+			
+			//avoid lost move
+			if(ss.hasLost()){
+				//System.out.println("lost move idx = "+i);
+				continue;
+			}
+			
+			//evaluate move
+			double V = evaluate1(ss, s, weights);
+			int R = ss.getRowsCleared();
+			double U = R+V;
+			
+			//update best five move
+			if(currentNumberOfBestFive <5){
+				bestFiveU[currentNumberOfBestFive] = U;
+				bestFiveAction[currentNumberOfBestFive] = i;
+				if (U < minBestFiveU)
+				{
+					minBestFiveU = U;
+					minBestFiveAction = i;
+					minBestFiveIndex = currentNumberOfBestFive;
+				}
+				currentNumberOfBestFive++;
+			}
+			else{
+				if (U > minBestFiveU)
+				{
+					bestFiveU[minBestFiveIndex] = U;
+					bestFiveAction[minBestFiveIndex] = i;
+					minBestFiveU = bestFiveU[0];
+					minBestFiveAction = bestFiveAction[0];
+					minBestFiveIndex = 0;
+					for (int j=1; j<5; j++)
+					{
+						if (bestFiveU[j]<minBestFiveU)
+						{
+							minBestFiveU = bestFiveU[j];
+							minBestFiveAction = bestFiveAction[j];
+							minBestFiveIndex = j;
+						}
+					}
+				}
+			}
+
+		}
+
+		//System.out.println("Action = "+ printArrInt(legalMoves[maxUAction]));
+		//System.out.println ("Action="+maxUAction+" U="+maxU+" R="+maxR+" V="+maxV);
+		
+		int MaxU = 0;
+		int MaxIndex = 0;
+		for (int current=0; current<5; current++)
+		{
+			int sumCurrentMoveU = 0;
+			SimState ss = new SimState();
+			ss.setField(s.getField());
+			ss.setNextPiece(s.getNextPiece());
+			ss.setTop(s.getTop());
+			ss.makeMove(bestFiveAction[current]);
+			for (int i=0; i<7; i++)
+			{
+				SimState sss = new SimState();
+				sss.setField(ss.getField());
+				sss.setNextPiece(i);
+				sss.setTop(ss.getTop());
+				for (int j=0; j<sss.legalMoves().length; j++)
+				{
+					SimState ssss = new SimState();
+					ssss.setField(sss.getField());
+					ssss.setNextPiece(sss.getNextPiece());
+					ssss.setTop(sss.getTop());
+					ssss.makeMove(sss.legalMoves()[j]);
+					//System.out.println("J = "+j);
+					
+					//avoid lost move
+					if(ssss.hasLost()){
+						//System.out.println("lost move idx = "+i);
+						continue;
+					}
+					
+					//evaluate move
+					double V = evaluate1(ssss, ss, weights);
+					int R = ssss.getRowsCleared();
+					double U = R+V;
+					
+					//update selection
+					sumCurrentMoveU += U;
+				}
+				
+			}
+			if (sumCurrentMoveU>MaxU)
+			{
+				MaxU = sumCurrentMoveU;
+				MaxIndex = current;
+			}
+		}
+		
+		return bestFiveAction[MaxIndex];
+	}
+	
 	
 	public static int runOnce(double[] weights, boolean visualOn){
 		if(visualOn){
@@ -280,7 +406,7 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
 				
 				s.draw();
 				s.drawNext(0,0);
@@ -303,7 +429,7 @@ public class PlayerSkeleton {
 			int move =0;
 			while(!s.hasLost()) {
 				move++;
-				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
+				s.makeMove(p.pickMoveAdvance(s,s.legalMoves(),weights));
 			}
 			int score = s.getRowsCleared();
 			//System.out.println("moves made = "+move);
@@ -419,103 +545,6 @@ public class PlayerSkeleton {
 		return gBestLocation.getLoc();
 	}
 	
-	public static double[] lotusSwarm(double[] arr,int level,double[] roof,double[] floor){
-		ArrayList <double[]> particle_list = new ArrayList<double[]>();
-		int num_particles = 8;
-		int depth_limit = 3;
-		double small_radius = (roof[0] - floor[0])/100;
-		
-		if(level >= depth_limit){
-			// if achieved maximum depth, stop
-		    return null;
-		}
-		
-		// generate child particles to continue search
-		if(result_particle == null){
-			// if original particle, initialize
-			System.out.println("Initialize");
-			for(int k=0;k<num_particles;k++){
-				Random random = new Random();
-				double[] new_particle = {random.nextDouble()*(roof[0]-floor[0])+floor[0],
-						random.nextDouble()*(roof[1]-floor[1])+floor[1],
-						random.nextDouble()*(roof[2]-floor[2])+floor[2],
-						random.nextDouble()*(roof[3]-floor[3])+floor[3],
-						random.nextDouble()*(roof[4]-floor[4])+floor[4]};
-				particle_list.add(new_particle);
-			}
-		}else if(Arrays.equals(arr, result_particle)){
-			// if self is best particle, randomly search near regions
-			System.out.println("Search around best");
-			for(int k=0;k<num_particles;k++){
-				Random random = new Random();
-				Random sign = new Random();
-				if((sign.nextInt() & 1) == 0) small_radius = -small_radius;
-				double[] new_particle = {random.nextDouble()*(small_radius)+arr[0],
-						random.nextDouble()*(small_radius)+arr[1],
-						random.nextDouble()*(small_radius)+arr[2],
-						random.nextDouble()*(small_radius)+arr[3],
-						random.nextDouble()*(small_radius)+arr[4]};
-				particle_list.add(new_particle);
-			}
-		}else{
-			// if self is not the best particle, in high possibility we random search towards the the best particle
-			// and in low possibility give random search
-			for(int k=0;k<num_particles;k++){
-				Random possibility = new Random();
-				if(possibility.nextDouble()>0.3){
-					System.out.println("Search towards best");
-					Random random = new Random();
-					double[] new_particle = {random.nextDouble()*(result_particle[0]-arr[0])+arr[0],
-						random.nextDouble()*(result_particle[1]-arr[1])+arr[1],
-						random.nextDouble()*(result_particle[2]-arr[2])+arr[2],
-						random.nextDouble()*(result_particle[3]-arr[3])+arr[3],
-						random.nextDouble()*(result_particle[4]-arr[4])+arr[4]};
-					particle_list.add(new_particle);
-				}else{
-					System.out.println("Random behavior");
-					Random random = new Random();
-					double[] new_particle = {random.nextDouble()*(roof[0]-floor[0])+floor[0],
-							random.nextDouble()*(roof[1]-floor[1])+floor[1],
-							random.nextDouble()*(roof[2]-floor[2])+floor[2],
-							random.nextDouble()*(roof[3]-floor[3])+floor[3],
-							random.nextDouble()*(roof[4]-floor[4])+floor[4]};
-					particle_list.add(new_particle);
-				}
-			}
-		}
-		
-		// Compare all childen's performance
-		for(Iterator<double[]> child = particle_list.iterator(); child.hasNext(); ) {
-			double[] current = child.next();
-			// run 5 time per weight, to get average
-			int sum = 0;
-			int counter = 10;
-			for(int i=0; i<counter; i++){
-				int result = runOnce(current,false);
-				sum += result;
-			}
-			
-			int result = sum/counter;
-			
-			
-		    if (result>result_best) {
-		    	result_best = result;
-		    	result_particle = current;
-		    }
-		    System.out.print("score = "+result + "  ");
-			System.out.println("best = "+result_best + "  weight = "+printArrDouble(result_particle));
-		}
-		
-		// let sub-swarm continue sub-region search
-		for(Iterator<double[]> child = particle_list.iterator(); child.hasNext(); ) {
-			double[] current = child.next();
-			lotusSwarm(current,(level+1),roof,floor);
-		}
-		
-		
-		return null;
-	}
-	
 	public static void main(String[] args) {	
 		
 		
@@ -537,33 +566,10 @@ public class PlayerSkeleton {
 		//double max = 0;
 		double ans = 0;
 		for (int j=0; j<TEST_TIME; j++)
-			ans += runOnce(bestWeight, false);
+			ans += runOnce(bestWeight, true);
 		ans = ans/TEST_TIME;
 		System.out.println(ans);
 		
-		// Test for lotus swarm
-		/*int best=0;
-		double[] roof = {0,0,0,0,1};
-		double[] floor = {-1,-1,-1,-1,-1};
-		long startTime = System.currentTimeMillis();
-		lotusSwarm(roof,0,roof,floor);
-		
-		double[] bestWeights= result_particle;
-		int threshold_test = 10;
-		long estimatedTime = System.currentTimeMillis() - startTime;
-		System.out.println("time = "+estimatedTime/1000.0+" s");
-		System.out.println("best particle: ");
-        System.out.println(printArrDouble(result_particle));
-		
-
-		for(int i = 0;i<threshold_test;i++){
-			int result = runOnce(bestWeights,false);
-			System.out.print("result score = "+result + "  ");
-			if(result>best) best =result;
-			System.out.println("result best = "+best);
-		}*/			
-		
-		//
 		
 	}
 	
